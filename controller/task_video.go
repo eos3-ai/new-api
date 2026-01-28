@@ -145,7 +145,8 @@ func updateVideoSingleTask(ctx context.Context, adaptor channel.TaskAdaptor, cha
 		if task.FinishTime == 0 {
 			task.FinishTime = now
 		}
-		if !(len(taskResult.Url) > 5 && taskResult.Url[:5] == "data:") {
+		// 存储所有类型的视频 URL（包括 HTTP URL 和 data: URI）
+		if taskResult.Url != "" {
 			task.FailReason = taskResult.Url
 		}
 
