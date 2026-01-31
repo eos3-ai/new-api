@@ -2,7 +2,9 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -1292,5 +1294,62 @@ func UpdateUserSetting(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "设置已更新",
+	})
+}
+
+type TestNotifyRequest struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+func TestNotify(c *gin.Context) {
+	userId := c.GetInt("id")
+	user, err := model.GetUserById(userId, true)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+
+	var req TestNotifyRequest
+	if err := c.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "无效的参数",
+		})
+		return
+	}
+
+	title := strings.TrimSpace(req.Title)
+	if title == "" {
+		title = "通知测试"
+	}
+
+	userSetting := user.GetSetting()
+	notifyType := userSetting.NotifyType
+	if notifyType == "" {
+		notifyType = dto.NotifyTypeEmail
+	}
+
+	content := strings.TrimSpace(req.Content)
+	if content == "" {
+		if notifyType == dto.NotifyTypeEmail {
+			content = "这是一条测试通知<br/>第二行内容<br/><br/>若收到换行，说明格式生效。"
+		} else {
+			content = "这是一条测试通知\n第二行内容\n\n若收到换行，说明格式生效。"
+		}
+	}
+
+	data := dto.NewNotify(dto.NotifyTypeNotifyTest, title, content, nil)
+	if err := service.NotifyUser(userId, user.Email, userSetting, data); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "测试通知已发送",
 	})
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
@@ -29,8 +30,22 @@ func DisableChannel(channelError types.ChannelError, reason string) {
 
 	success := model.UpdateChannelStatus(channelError.ChannelId, channelError.UsingKey, common.ChannelStatusAutoDisabled, reason)
 	if success {
-		subject := fmt.Sprintf("通道「%s」（#%d）已被禁用", channelError.ChannelName, channelError.ChannelId)
-		content := fmt.Sprintf("通道「%s」（#%d）已被禁用，原因：%s", channelError.ChannelName, channelError.ChannelId, reason)
+		now := time.Now().Format("2006-01-02 15:04:05")
+		subject := fmt.Sprintf("【通道告警】- %s (#%d)", channelError.ChannelName, channelError.ChannelId)
+		content := fmt.Sprintf(
+			"**【通道告警】- New API 通道监控 🚨**\n"+
+				"**📡 通道名称:** %s\n"+
+				"**🆔 通道ID:** #%d\n"+
+				"**🔄 状态变更: 启用 → 自动禁用**\n"+
+				"**🕘 禁用时间:** %s\n"+
+				"**⚠️ 告警等级: 严重**\n"+
+				"**📝 失败原因:** %s\n"+
+				"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;—— 🧑‍🤝‍🧑 LaiYe科技 -- 运维团队 ——",
+			channelError.ChannelName,
+			channelError.ChannelId,
+			now,
+			reason,
+		)
 		NotifyRootUser(formatNotifyType(channelError.ChannelId, common.ChannelStatusAutoDisabled), subject, content)
 	}
 }
@@ -38,8 +53,20 @@ func DisableChannel(channelError types.ChannelError, reason string) {
 func EnableChannel(channelId int, usingKey string, channelName string) {
 	success := model.UpdateChannelStatus(channelId, usingKey, common.ChannelStatusEnabled, "")
 	if success {
-		subject := fmt.Sprintf("通道「%s」（#%d）已被启用", channelName, channelId)
-		content := fmt.Sprintf("通道「%s」（#%d）已被启用", channelName, channelId)
+		now := time.Now().Format("2006-01-02 15:04:05")
+		subject := fmt.Sprintf("【通道恢复】- %s (#%d)", channelName, channelId)
+		content := fmt.Sprintf(
+			"**【通道恢复】- New API 通道监控 ✅**\n"+
+				"**📡 通道名称:** %s\n"+
+				"**🆔 通道ID:** #%d\n"+
+				"**🔄 状态变更: 自动禁用 → 启用**\n"+
+				"**🕘 恢复时间:** %s\n"+
+				"**✨ 状态: 通道已恢复正常**\n"+
+				"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;—— 🧑‍🤝‍🧑 LaiYe科技 -- 运维团队 ——",
+			channelName,
+			channelId,
+			now,
+		)
 		NotifyRootUser(formatNotifyType(channelId, common.ChannelStatusEnabled), subject, content)
 	}
 }

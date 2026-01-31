@@ -62,6 +62,7 @@ const NotificationSettings = ({
   // 左侧边栏设置相关状态
   const [sidebarLoading, setSidebarLoading] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState('notification');
+  const [testNotifyLoading, setTestNotifyLoading] = useState(false);
   const [sidebarModulesUser, setSidebarModulesUser] = useState({
     chat: {
       enabled: true,
@@ -341,6 +342,21 @@ const NotificationSettings = ({
     } else {
       saveNotificationSettings();
     }
+  };
+
+  const handleSendTestNotify = async () => {
+    setTestNotifyLoading(true);
+    try {
+      const res = await API.post('/api/user/notify/test', {});
+      if (res.data.success) {
+        showSuccess(t('测试通知已发送'));
+      } else {
+        showError(res.data.message || t('发送失败'));
+      }
+    } catch (error) {
+      showError(t('发送失败'));
+    }
+    setTestNotifyLoading(false);
   };
 
   return (
@@ -721,6 +737,19 @@ const NotificationSettings = ({
                     </div>
                   </>
                 )}
+
+                <div className='mt-4 flex items-center gap-3'>
+                  <Button
+                    type='secondary'
+                    onClick={handleSendTestNotify}
+                    loading={testNotifyLoading}
+                  >
+                    {t('发送测试通知')}
+                  </Button>
+                  <Typography.Text type='tertiary' className='text-xs'>
+                    {t('使用已保存的通知配置发送测试消息')}
+                  </Typography.Text>
+                </div>
               </div>
             </TabPane>
 
