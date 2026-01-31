@@ -97,6 +97,10 @@ func testChannel(channel *model.Channel, testModel string, endpointType string) 
 		if channel.Type == constant.ChannelTypeVolcEngine && strings.Contains(testModel, "seedream") {
 			requestPath = "/v1/images/generations"
 		}
+		// z-images 图像生成模型
+		if isZImagesModel(testModel) {
+			requestPath = "/v1/images/generations"
+		}
 
 		// responses-only models
 		if strings.Contains(strings.ToLower(testModel), "codex") {
@@ -404,6 +408,11 @@ func testChannel(channel *model.Channel, testModel string, endpointType string) 
 	}
 }
 
+func isZImagesModel(model string) bool {
+	model = strings.ToLower(strings.TrimSpace(model))
+	return model == "z-images" || model == "z_image" || model == "zimage" || strings.Contains(model, "z-images")
+}
+
 func buildTestRequest(model string, endpointType string, channel *model.Channel) dto.Request {
 	// 根据端点类型构建不同的测试请求
 	if endpointType != "" {
@@ -465,6 +474,17 @@ func buildTestRequest(model string, endpointType string, channel *model.Channel)
 		return &dto.EmbeddingRequest{
 			Model: model,
 			Input: []any{"hello world"},
+		}
+	}
+
+	// z-images 图像模型测试
+	if isZImagesModel(model) {
+		return &dto.ImageRequest{
+			Model:          model,
+			Prompt:         "a cute cat",
+			N:              1,
+			Size:           "1024x1024",
+			ResponseFormat: "b64_json",
 		}
 	}
 
