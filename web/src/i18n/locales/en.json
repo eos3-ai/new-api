@@ -1607,6 +1607,7 @@
     "渠道更新成功！": "Channel updated successfully!",
     "渠道权重": "Channel Weight",
     "渠道标签": "Channel Tag",
+    "渠道标签说明": "Comma-separated tags; include no_auto_test to skip auto tests (manual tests unaffected).",
     "渠道模型信息不完整": "Channel model information is incomplete",
     "渠道的基本配置信息": "Channel basic configuration information",
     "渠道的模型测试": "Channel Model Test",

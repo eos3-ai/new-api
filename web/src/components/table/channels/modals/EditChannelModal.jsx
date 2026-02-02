@@ -2699,6 +2699,7 @@ const EditChannelModal = (props) => {
                       field='tag'
                       label={t('渠道标签')}
                       placeholder={t('渠道标签')}
+                      extraText={t('渠道标签说明')}
                       showClear
                       onChange={(value) => handleInputChange('tag', value)}
                     />

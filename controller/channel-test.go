@@ -576,6 +576,19 @@ func TestChannel(c *gin.Context) {
 var testAllChannelsLock sync.Mutex
 var testAllChannelsRunning bool = false
 
+func shouldSkipAutoTest(channel *model.Channel) bool {
+	tag := strings.TrimSpace(channel.GetTag())
+	if tag == "" {
+		return false
+	}
+	for _, item := range strings.Split(tag, ",") {
+		if strings.TrimSpace(item) == "no_auto_test" {
+			return true
+		}
+	}
+	return false
+}
+
 func testAllChannels(notify bool) error {
 
 	testAllChannelsLock.Lock()
@@ -602,6 +615,9 @@ func testAllChannels(notify bool) error {
 		}()
 
 		for _, channel := range channels {
+			if shouldSkipAutoTest(channel) {
+				continue
+			}
 			isChannelEnabled := channel.Status == common.ChannelStatusEnabled
 			tik := time.Now()
 			result := testChannel(channel, "", "")

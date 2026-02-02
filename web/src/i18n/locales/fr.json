@@ -1617,6 +1617,7 @@
     "渠道更新成功！": "Canal mis à jour avec succès !",
     "渠道权重": "Poids du canal",
     "渠道标签": "Étiquette du canal",
+    "渠道标签说明": "Tags séparés par des virgules ; inclure no_auto_test pour ignorer les tests automatiques (les tests manuels ne sont pas affectés).",
     "渠道模型信息不完整": "Informations du modèle de canal incomplètes",
     "渠道的基本配置信息": "Informations de configuration de base du canal",
     "渠道的模型测试": "Test de modèle de canal",

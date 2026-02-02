@@ -1719,6 +1719,7 @@
     "渠道更新成功！": "Cập nhật kênh thành công!",
     "渠道权重": "Trọng số kênh",
     "渠道标签": "Thẻ kênh",
+    "渠道标签说明": "Thẻ phân tách bằng dấu phẩy; thêm no_auto_test để bỏ qua kiểm tra tự động (kiểm tra thủ công không bị ảnh hưởng).",
     "渠道模型信息不完整": "Thông tin mô hình kênh không đầy đủ",
     "渠道测试": "Kiểm tra kênh",
     "渠道状态": "Trạng thái kênh",
