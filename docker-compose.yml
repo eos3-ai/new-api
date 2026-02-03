@@ -23,6 +23,8 @@ services:
       - BATCH_UPDATE_ENABLED=true  # 是否启用批量更新 (Whether to enable batch update)
       - NOTIFY_LIMIT_COUNT=20
       - NOTIFICATION_LIMIT_DURATION_MINUTE=5
+      - DB_MAX_OPEN_CONNS=200  # 数据库连接池最大连接数 (Max open connections in DB pool)
+      - DB_MAX_IDLE_CONNS=50   # 数据库连接池最大空闲连接数 (Max idle connections in DB pool)
 #      - STREAMING_TIMEOUT=300  # 流模式无响应超时时间，单位秒，默认120秒，如果出现空补全可以尝试改为更大值 （Streaming timeout in seconds, default is 120s. Increase if experiencing empty completions）
 #      - SESSION_SECRET=random_string  # 多机部署时设置，必须修改这个随机字符串！！ （multi-node deployment, set this to a random string!!!!!!!）
 #      - SYNC_FREQUENCY=60  # Uncomment if regular database syncing is needed
@@ -49,6 +51,12 @@ services:
     image: postgres:15
     container_name: postgres
     restart: always
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=500"
+      - "-c"
+      - "shared_buffers=256MB"
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: 123456  # ⚠️ IMPORTANT: Change this password in production!
