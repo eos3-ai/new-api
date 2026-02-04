@@ -7,9 +7,10 @@ type ChannelError struct {
 	IsMultiKey  bool   `json:"is_multi_key"`
 	AutoBan     bool   `json:"auto_ban"`
 	UsingKey    string `json:"using_key"`
+	Tag         string `json:"tag"`
 }
 
-func NewChannelError(channelId int, channelType int, channelName string, isMultiKey bool, usingKey string, autoBan bool) *ChannelError {
+func NewChannelError(channelId int, channelType int, channelName string, isMultiKey bool, usingKey string, autoBan bool, tag string) *ChannelError {
 	return &ChannelError{
 		ChannelId:   channelId,
 		ChannelType: channelType,
@@ -17,5 +18,6 @@ func NewChannelError(channelId int, channelType int, channelName string, isMulti
 		IsMultiKey:  isMultiKey,
 		AutoBan:     autoBan,
 		UsingKey:    usingKey,
+		Tag:         tag,
 	}
 }

@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: 172.16.10.3:5000/laiye-foundry/calciumion/new-api:v0.10.5-fixed-notify-zimage-noAutoTest
+    image: 172.16.10.3:5000/laiye-foundry/calciumion/new-api:v0.10.5-fixed-noAutoDisable
     container_name: new-api
     restart: always
     command: --log-dir /app/logs

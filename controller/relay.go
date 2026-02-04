@@ -214,7 +214,7 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 			return
 		}
 
-		processChannelError(c, *types.NewChannelError(channel.Id, channel.Type, channel.Name, channel.ChannelInfo.IsMultiKey, common.GetContextKeyString(c, constant.ContextKeyChannelKey), channel.GetAutoBan()), newAPIError)
+		processChannelError(c, *types.NewChannelError(channel.Id, channel.Type, channel.Name, channel.ChannelInfo.IsMultiKey, common.GetContextKeyString(c, constant.ContextKeyChannelKey), channel.GetAutoBan(), channel.GetTag()), newAPIError)
 
 		if !shouldRetry(c, newAPIError, common.RetryTimes-retryParam.GetRetry()) {
 			break
@@ -275,11 +275,13 @@ func getChannel(c *gin.Context, info *relaycommon.RelayInfo, retryParam *service
 		if !autoBan {
 			autoBanInt = 0
 		}
+		tag := c.GetString("channel_tag")
 		return &model.Channel{
 			Id:      c.GetInt("channel_id"),
 			Type:    c.GetInt("channel_type"),
 			Name:    c.GetString("channel_name"),
 			AutoBan: &autoBanInt,
+			Tag:     &tag,
 		}, nil
 	}
 	channel, selectGroup, err := service.CacheGetRandomSatisfiedChannel(retryParam)
@@ -342,11 +344,27 @@ func shouldRetry(c *gin.Context, openaiErr *types.NewAPIError, retryTimes int) b
 	return true
 }
 
+func shouldSkipAutoDisable(tag string) bool {
+	tag = strings.TrimSpace(tag)
+	if tag == "" {
+		return false
+	}
+	for _, item := range strings.Split(tag, ",") {
+		if strings.TrimSpace(item) == "no_auto_test" {
+			return true
+		}
+	}
+	return false
+}
+
 func processChannelError(c *gin.Context, channelError types.ChannelError, err *types.NewAPIError) {
 	logger.LogError(c, fmt.Sprintf("channel error (channel #%d, status code: %d): %s", channelError.ChannelId, err.StatusCode, err.Error()))
 	// 不要使用context获取渠道信息，异步处理时可能会出现渠道信息不一致的情况
 	// do not use context to get channel info, there may be inconsistent channel info when processing asynchronously
-	if service.ShouldDisableChannel(channelError.ChannelType, err) && channelError.AutoBan {
+	// 检查是否应该跳过自动禁用（带有 no_auto_test 标签的渠道不会被自动禁用）
+	skipAutoDisable := shouldSkipAutoDisable(channelError.Tag)
+	common.SysLog(fmt.Sprintf("processChannelError: channel #%d, tag='%s', skipAutoDisable=%v, AutoBan=%v", channelError.ChannelId, channelError.Tag, skipAutoDisable, channelError.AutoBan))
+	if service.ShouldDisableChannel(channelError.ChannelType, err) && channelError.AutoBan && !skipAutoDisable {
 		gopool.Go(func() {
 			service.DisableChannel(channelError, err.Error())
 		})
