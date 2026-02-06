@@ -136,6 +136,11 @@ func (a *TaskAdaptor) ValidateRequestAndSetAction(c *gin.Context, info *relaycom
 }
 
 func (a *TaskAdaptor) BuildRequestURL(info *relaycommon.RelayInfo) (string, error) {
+	// kf2v（关键帧生视频）模型使用 image2video 端点
+	if strings.Contains(info.OriginModelName, "kf2v") {
+		return fmt.Sprintf("%s/api/v1/services/aigc/image2video/video-synthesis", a.baseURL), nil
+	}
+	// 其他视频生成模型使用 video-generation 端点
 	return fmt.Sprintf("%s/api/v1/services/aigc/video-generation/video-synthesis", a.baseURL), nil
 }
 
@@ -322,6 +327,51 @@ func (a *TaskAdaptor) convertToAliRequest(info *relaycommon.RelayInfo, req relay
 	// 从 metadata 中提取额外参数
 	if req.Metadata != nil {
 		if metadataBytes, err := common.Marshal(req.Metadata); err == nil {
+			// 先尝试解析为 AliMetadata 以处理 Input 相关字段
+			var metadata AliMetadata
+			if err := common.Unmarshal(metadataBytes, &metadata); err == nil {
+				// 映射 Input 相关字段
+				if metadata.FirstFrameURL != "" {
+					aliReq.Input.FirstFrameURL = metadata.FirstFrameURL
+				}
+				if metadata.LastFrameURL != "" {
+					aliReq.Input.LastFrameURL = metadata.LastFrameURL
+				}
+				if metadata.AudioURL != "" {
+					aliReq.Input.AudioURL = metadata.AudioURL
+				}
+				if metadata.NegativePrompt != "" {
+					aliReq.Input.NegativePrompt = metadata.NegativePrompt
+				}
+				if metadata.Template != "" {
+					aliReq.Input.Template = metadata.Template
+				}
+
+				// 映射 Parameters 相关字段（覆盖默认值）
+				if metadata.Resolution != nil {
+					aliReq.Parameters.Resolution = *metadata.Resolution
+				}
+				if metadata.Size != nil {
+					aliReq.Parameters.Size = *metadata.Size
+				}
+				if metadata.Duration != nil {
+					aliReq.Parameters.Duration = *metadata.Duration
+				}
+				if metadata.PromptExtend != nil {
+					aliReq.Parameters.PromptExtend = *metadata.PromptExtend
+				}
+				if metadata.Watermark != nil {
+					aliReq.Parameters.Watermark = *metadata.Watermark
+				}
+				if metadata.Audio != nil {
+					aliReq.Parameters.Audio = metadata.Audio
+				}
+				if metadata.Seed != nil {
+					aliReq.Parameters.Seed = *metadata.Seed
+				}
+			}
+
+			// 保留原有逻辑：尝试直接 unmarshal 到 aliReq（处理其他可能的字段）
 			err = common.Unmarshal(metadataBytes, aliReq)
 			if err != nil {
 				return nil, errors.Wrap(err, "unmarshal metadata failed")
