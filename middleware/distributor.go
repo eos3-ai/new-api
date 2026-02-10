@@ -52,24 +52,28 @@ func Distribute() func(c *gin.Context) {
 			}
 		} else {
 			// Select a channel for the user
-			// check token model mapping
-			modelLimitEnable := common.GetContextKeyBool(c, constant.ContextKeyTokenModelLimitEnabled)
-			if modelLimitEnable {
-				s, ok := common.GetContextKey(c, constant.ContextKeyTokenModelLimit)
-				if !ok {
-					// token model limit is empty, all models are not allowed
-					abortWithOpenAiMessage(c, http.StatusForbidden, "该令牌无权访问任何模型")
-					return
-				}
-				var tokenModelLimit map[string]bool
-				tokenModelLimit, ok = s.(map[string]bool)
-				if !ok {
-					tokenModelLimit = map[string]bool{}
-				}
-				matchName := ratio_setting.FormatMatchingModelName(modelRequest.Model) // match gpts & thinking-*
-				if _, ok := tokenModelLimit[matchName]; !ok {
-					abortWithOpenAiMessage(c, http.StatusForbidden, "该令牌无权访问模型 "+modelRequest.Model)
-					return
+			// check token model mapping (only when shouldSelectChannel is true, i.e., for submit operations)
+			// For fetch operations (shouldSelectChannel=false), skip model limit check as they are already
+			// protected by user_id validation in database queries
+			if shouldSelectChannel {
+				modelLimitEnable := common.GetContextKeyBool(c, constant.ContextKeyTokenModelLimitEnabled)
+				if modelLimitEnable {
+					s, ok := common.GetContextKey(c, constant.ContextKeyTokenModelLimit)
+					if !ok {
+						// token model limit is empty, all models are not allowed
+						abortWithOpenAiMessage(c, http.StatusForbidden, "该令牌无权访问任何模型")
+						return
+					}
+					var tokenModelLimit map[string]bool
+					tokenModelLimit, ok = s.(map[string]bool)
+					if !ok {
+						tokenModelLimit = map[string]bool{}
+					}
+					matchName := ratio_setting.FormatMatchingModelName(modelRequest.Model) // match gpts & thinking-*
+					if _, ok := tokenModelLimit[matchName]; !ok {
+						abortWithOpenAiMessage(c, http.StatusForbidden, "该令牌无权访问模型 "+modelRequest.Model)
+						return
+					}
 				}
 			}
 
